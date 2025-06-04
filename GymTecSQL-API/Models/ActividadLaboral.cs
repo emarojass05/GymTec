@@ -13,8 +13,6 @@ namespace GymTecSQL_API.Models
 
         public required int Horas { get; set; }
 
-        public required int IdClase { get; set; }
-
         public required int IdEmpleado { get; set; }
     }
 }

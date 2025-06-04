@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GymTecSQL_API.Models
 {
     public class Cliente
     {
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int CedulaCliente { get; set; }
 
         public required string NombreCliente { get; set; }

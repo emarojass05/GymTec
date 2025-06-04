@@ -12,9 +12,5 @@ namespace GymTecSQL_API.Models
         public required DateTime FechaApertura { get; set; }
 
         public required string HorarioAtencion { get; set; }
-
-        public required int IdSpa { get; set; }
-
-        public required int IdTienda { get; set; }
     }
 }

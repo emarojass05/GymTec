@@ -7,6 +7,8 @@ namespace GymTecSQL_API.Models
         [Key]
         public int IdTienda { get; set; }
 
-        public required bool EstadoTienda { get; set; }
+        public required int EstadoTienda { get; set; }
+
+        public required int IdSucursal {  get; set; }
     }
 }

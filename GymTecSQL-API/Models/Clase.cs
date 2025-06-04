@@ -9,9 +9,9 @@ namespace GymTecSQL_API.Models
 
         public required int TipoClase { get; set; }
 
-        public required int InstructorClase { get; set; }
+        public required int IdInstructorClase { get; set; }
 
-        public required int ModalidadClase { get; set; }
+        public required bool Grupal { get; set; }
 
         public required int CapacidadClase { get; set; }
 

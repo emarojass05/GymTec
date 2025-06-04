@@ -1,0 +1,20 @@
+services:
+
+  gymtecdb:
+    image: postgres:17-alpine
+    restart: always
+    shm_size: 256mb
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: GymTecUser
+    # Puerto expuesto para posibilitar acceso externo (API)
+    ports:
+      - 7171:5432
+
+  adminer:
+    image: adminer
+    restart: always
+    # Puerto del adminer
+    ports:
+      - 7272:8080

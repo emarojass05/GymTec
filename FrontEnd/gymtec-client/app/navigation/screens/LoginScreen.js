@@ -1,30 +1,56 @@
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState } from 'react';
 import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
+  Alert,
   Image,
-  Alert
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export default function LoginScreen({ navigation }) {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!correo || !password) {
       Alert.alert('Error', 'Por favor completa ambos campos.');
       return;
     }
 
-    // Simulación de autenticación
-    // Aquí puedes validar con SQLite o tu backend
-    if (correo === 'usuario@example.com' && password === '1234') {
-      navigation.navigate('Home');
-    } else {
-      Alert.alert('Error', 'Credenciales incorrectas.');
+    try {
+      // REEMPLAZA con la URL correcta de tu API:
+      const baseURL = 'http://localhost:7078/api/Cliente/Authenticate';
+      const url = `${baseURL}?correo=${encodeURIComponent(correo)}&password=${encodeURIComponent(password)}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.status === 200) {
+        const clienteData = await response.json();
+        // ----- AÑADE ESTA LÍNEA PARA LOGUEAR EL OBJETO CLIENTE EN CONSOLA -----
+        console.log('Cliente obtenido desde API:', clienteData);
+
+        // Guardar en AsyncStorage
+        await AsyncStorage.setItem('cedulaCliente', clienteData.cedulaCliente.toString());
+
+        // Navegar a la pantalla Home
+        navigation.navigate('Home');
+      } else if (response.status === 401) {
+        Alert.alert('Error', 'Credenciales incorrectas.');
+      } else {
+        const errorText = await response.text();
+        Alert.alert('Error', `Falló la autenticación: ${errorText}`);
+      }
+    } catch (err) {
+      console.error('Error al consumir la API:', err);
+      Alert.alert('Error', 'No se pudo conectar al servidor.');
     }
   };
 

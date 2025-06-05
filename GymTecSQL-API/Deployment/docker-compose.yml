@@ -8,6 +8,7 @@ services:
       - ./pgdata:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: GymTecUser
+      POSTGRES_DB: GymTecDB
     # Puerto expuesto para posibilitar acceso externo (API)
     ports:
       - 7171:5432

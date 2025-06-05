@@ -1,11 +1,4 @@
 ﻿---------------------------------------
--- Creación de la base de datos
--------------------
-START TRANSACTION;
-CREATE DATABASE "GymTecDB";
-COMMIT;
-
----------------------------------------
 -- Inicializar la base de datos
 -------------------
 START TRANSACTION;

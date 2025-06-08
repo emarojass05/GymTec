@@ -113,7 +113,8 @@ CREATE TABLE "Clase" (
     "HoraFinalizacionClase" time without time zone NOT NULL,
     "IdSucursal" integer NOT NULL,
     CONSTRAINT "PK_Clase" PRIMARY KEY ("IdClase"),
-    CONSTRAINT "FK_Clase_Sucursal_IdSucursal" FOREIGN KEY ("IdSucursal") REFERENCES "Sucursal" ("IdSucursal") ON DELETE RESTRICT
+    CONSTRAINT "FK_Clase_Sucursal_IdSucursal" FOREIGN KEY ("IdSucursal") REFERENCES "Sucursal" ("IdSucursal") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Clase_Servivio_TipoClase" FOREIGN KEY ("TipoClase") REFERENCES "Servicio" ("IdServicio") ON DELETE CASCADE
 );
 
 CREATE TABLE "Empleado" (

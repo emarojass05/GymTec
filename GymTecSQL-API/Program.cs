@@ -32,7 +32,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+<<<<<<< HEAD
 app.UseHttpsRedirection();
+=======
+app.UseHttpsRedirection(); 
+>>>>>>> 96016e32685ad60c08bd4e6647bc5e3b646b544d
 app.UseCors("AllowFrontend");
 app.UseAuthorization();
 app.MapControllers();

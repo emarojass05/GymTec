@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CryptoJS from 'crypto-js';
 import { useState } from 'react';
 import {
   Alert,
@@ -9,6 +10,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { apiUrl } from '../../../utils';
 
 export default function LoginScreen({ navigation }) {
   const [correo, setCorreo] = useState('');
@@ -20,27 +22,25 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    try {
-      // REEMPLAZA con la URL correcta de tu API:
-      const baseURL = 'http://localhost:7078/api/Cliente/Authenticate';
-      const url = `${baseURL}?correo=${encodeURIComponent(correo)}&password=${encodeURIComponent(password)}`;
+    // 1) Hashear la contraseña con MD5
+    const hashedPassword = CryptoJS.MD5(password).toString();
 
+    try {
+      // 2) Llamar al endpoint de autenticación
+      const url = `${apiUrl}/Cliente/Authenticate?correo=${encodeURIComponent(correo)}&password=${encodeURIComponent(hashedPassword)}`;
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
       });
 
       if (response.status === 200) {
         const clienteData = await response.json();
-        // ----- AÑADE ESTA LÍNEA PARA LOGUEAR EL OBJETO CLIENTE EN CONSOLA -----
         console.log('Cliente obtenido desde API:', clienteData);
 
-        // Guardar en AsyncStorage
+        // 3) Guardar cédula en AsyncStorage
         await AsyncStorage.setItem('cedulaCliente', clienteData.cedulaCliente.toString());
 
-        // Navegar a la pantalla Home
+        // 4) Navegar a Home
         navigation.navigate('Home');
       } else if (response.status === 401) {
         Alert.alert('Error', 'Credenciales incorrectas.');

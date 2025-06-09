@@ -22,34 +22,44 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    // 1) Hashear la contraseña con MD5
     const hashedPassword = CryptoJS.MD5(password).toString();
+    // ¿Cliente o Instructor?
+    const isInstructor = correo.toLowerCase().includes('ins');
+    const entidad = isInstructor ? 'Empleado' : 'Cliente';
+    const storageKey = isInstructor ? 'cedulaEmpleado' : 'cedulaCliente';
+    const nextScreen = isInstructor ? 'HomeInstructor' : 'Home';
 
     try {
-      // 2) Llamar al endpoint de autenticación
-      const url = `${apiUrl}/Cliente/Authenticate?correo=${encodeURIComponent(correo)}&password=${encodeURIComponent(hashedPassword)}`;
+      const url = `${apiUrl}/${entidad}/Authenticate`
+        + `?correo=${encodeURIComponent(correo)}`
+        + `&password=${encodeURIComponent(hashedPassword)}`;
+
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
 
       if (response.status === 200) {
-        const clienteData = await response.json();
-        console.log('Cliente obtenido desde API:', clienteData);
+        const data = await response.json();
+        console.log(`${entidad} obtenido:`, data);
 
-        // 3) Guardar cédula en AsyncStorage
-        await AsyncStorage.setItem('cedulaCliente', clienteData.cedulaCliente.toString());
+        // Guardar ID en AsyncStorage
+        const idKey = isInstructor
+          ? data.cedulaEmpleado
+          : data.cedulaCliente;
 
-        // 4) Navegar a Home
-        navigation.navigate('Home');
+        await AsyncStorage.setItem(storageKey, idKey.toString());
+
+        // Navegar
+        navigation.navigate(nextScreen);
       } else if (response.status === 401) {
         Alert.alert('Error', 'Credenciales incorrectas.');
       } else {
-        const errorText = await response.text();
-        Alert.alert('Error', `Falló la autenticación: ${errorText}`);
+        const t = await response.text();
+        Alert.alert('Error', `Falló la autenticación: ${t}`);
       }
     } catch (err) {
-      console.error('Error al consumir la API:', err);
+      console.error('Error en autenticación:', err);
       Alert.alert('Error', 'No se pudo conectar al servidor.');
     }
   };
@@ -94,36 +104,10 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  logo: {
-    width: 180,
-    height: 180,
-    alignSelf: 'center',
-    marginBottom: 30,
-  },
-  input: {
-    backgroundColor: '#eee',
-    padding: 10,
-    marginVertical: 8,
-    borderRadius: 6,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 8,
-    marginVertical: 8,
-  },
-  secondaryButton: {
-    backgroundColor: '#444',
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
+  container:        { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
+  logo:             { width: 180, height: 180, alignSelf: 'center', marginBottom: 30 },
+  input:            { backgroundColor: '#eee', padding: 10, marginVertical: 8, borderRadius: 6 },
+  button:           { backgroundColor: '#007AFF', padding: 14, borderRadius: 8, marginVertical: 8 },
+  secondaryButton:  { backgroundColor: '#444' },
+  buttonText:       { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
 });

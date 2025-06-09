@@ -1,30 +1,52 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { apiUrl } from '../../../utils';
 
-export default function SucursalesAdmin() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function SucursalesAdmin({ navigation }) {
+  const [sucursales, setSucursales] = useState([]);
+  const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
     fetch(`${apiUrl}/Sucursal`)
       .then(res => res.json())
-      .then(setData)
-      .catch(console.error)
+      .then(setSucursales)
+      .catch(err => {
+        console.error(err);
+        Alert.alert('Error', 'No se pudo cargar sucursales.');
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <ActivityIndicator style={styles.center} size="large" />;
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large"/>
+      </View>
+    );
+  }
 
   return (
     <FlatList
       contentContainerStyle={styles.container}
-      data={data}
+      data={sucursales}
       keyExtractor={item => item.idSucursal.toString()}
       renderItem={({ item }) => (
-        <View style={styles.card}>
-          <Text>{item.direccionSucursal}</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => navigation.navigate('SucursalDetailAdmin', {
+            idSucursal: item.idSucursal
+          })}
+        >
+          <Text style={styles.text}>{item.direccionSucursal}</Text>
+        </TouchableOpacity>
       )}
       ListEmptyComponent={<Text style={styles.empty}>No hay sucursales.</Text>}
     />
@@ -32,13 +54,14 @@ export default function SucursalesAdmin() {
 }
 
 const styles = StyleSheet.create({
-  center:    { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  container: { padding: 20 },
-  card:      {
-               padding: 16,
-               marginBottom: 12,
-               backgroundColor: '#fafafa',
-               borderRadius: 6
+  center:    { flex:1, justifyContent:'center', alignItems:'center' },
+  container: { padding:20, backgroundColor:'#fff' },
+  item:      {
+               padding:16,
+               backgroundColor:'#fafafa',
+               borderRadius:6,
+               marginBottom:10
              },
-  empty:     { textAlign: 'center', marginTop: 20 }
+  text:      { fontSize:16 },
+  empty:     { textAlign:'center', marginTop:20 }
 });

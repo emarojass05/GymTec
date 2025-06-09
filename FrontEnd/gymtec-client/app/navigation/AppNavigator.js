@@ -17,6 +17,7 @@ import PlanesInstructor from './screens/PlanesInstructor';
 // Administrador
 import CalendarioAdmin from './screens/CalendarioAdmin';
 import ConfiguracionGimnasioAdmin from './screens/ConfiguracionGimnasioAdmin';
+import CrearClasesAdmin from './screens/CrearClasesAdmin'; // ← Import agregado
 import EmpleadosAdmin from './screens/EmpleadosAdmin';
 import GeneracionPlanillaAdmin from './screens/GeneracionPlanillaAdmin';
 import GimnasiosAdmin from './screens/GimnasiosAdmin';
@@ -27,6 +28,7 @@ import ProductosAdmin from './screens/ProductosAdmin';
 import PuestosAdmin from './screens/PuestosAdmin';
 import ServiciosAdmin from './screens/ServiciosAdmin';
 import SpaTratamientosAdmin from './screens/SpaTratamientosAdmin';
+import SucursalDetailAdmin from './screens/SucursalDetailAdmin';
 import SucursalesAdmin from './screens/SucursalesAdmin';
 import TiposEquipoAdmin from './screens/TiposEquipoAdmin';
 
@@ -88,6 +90,11 @@ export default function AppNavigator() {
         options={{ title: 'Sucursales' }}
       />
       <Stack.Screen
+        name="SucursalDetailAdmin"
+        component={SucursalDetailAdmin}
+        options={{ title: 'Personalizar Sucursal' }}
+      />
+      <Stack.Screen
         name="SpaTratamientosAdmin"
         component={SpaTratamientosAdmin}
         options={{ title: 'Tratamientos de Spa' }}
@@ -131,6 +138,11 @@ export default function AppNavigator() {
         name="ConfiguracionGimnasioAdmin"
         component={ConfiguracionGimnasioAdmin}
         options={{ title: 'Configuración Gimnasio' }}
+      />
+      <Stack.Screen
+        name="CrearClasesAdmin"                // ← Pantalla registrada
+        component={CrearClasesAdmin}
+        options={{ title: 'Crear / Gestionar Clases' }}
       />
       <Stack.Screen
         name="GeneracionPlanillaAdmin"

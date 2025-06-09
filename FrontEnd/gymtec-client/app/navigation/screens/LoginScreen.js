@@ -23,11 +23,9 @@ export default function LoginScreen({ navigation }) {
     }
 
     const hashedPassword = CryptoJS.MD5(password).toString();
-    // ¿Cliente o Instructor?
-    const isInstructor = correo.toLowerCase().includes('ins');
-    const entidad = isInstructor ? 'Empleado' : 'Cliente';
-    const storageKey = isInstructor ? 'cedulaEmpleado' : 'cedulaCliente';
-    const nextScreen = isInstructor ? 'HomeInstructor' : 'Home';
+    // Determinamos si es Empleado o Cliente según ruta
+    const entidad = correo.toLowerCase().includes('ins') ? 'Empleado' : 'Cliente';
+    const storageKey = entidad === 'Empleado' ? 'cedulaEmpleado' : 'cedulaCliente';
 
     try {
       const url = `${apiUrl}/${entidad}/Authenticate`
@@ -43,21 +41,39 @@ export default function LoginScreen({ navigation }) {
         const data = await response.json();
         console.log(`${entidad} obtenido:`, data);
 
-        // Guardar ID en AsyncStorage
-        const idKey = isInstructor
+        // Guardar cédula
+        const idKey = entidad === 'Empleado'
           ? data.cedulaEmpleado
           : data.cedulaCliente;
-
         await AsyncStorage.setItem(storageKey, idKey.toString());
 
-        // Navegar
-        navigation.navigate(nextScreen);
+        // Si es Empleado, revisamos su Puesto
+        if (entidad === 'Empleado') {
+          const puesto = data.idPuesto;
+          // Guardamos también el puesto si lo necesitas
+          await AsyncStorage.setItem('puestoEmpleado', puesto.toString());
+
+          if (puesto === 1) {
+            navigation.navigate('HomePageAdmin');
+          } else if (puesto === 2) {
+            navigation.navigate('HomeInstructor');
+          } else {
+            // Otros roles: enviamos al instructor por defecto
+            navigation.navigate('HomeInstructor');
+          }
+
+        } else {
+          // Cliente
+          navigation.navigate('Home');
+        }
+
       } else if (response.status === 401) {
         Alert.alert('Error', 'Credenciales incorrectas.');
       } else {
         const t = await response.text();
         Alert.alert('Error', `Falló la autenticación: ${t}`);
       }
+
     } catch (err) {
       console.error('Error en autenticación:', err);
       Alert.alert('Error', 'No se pudo conectar al servidor.');

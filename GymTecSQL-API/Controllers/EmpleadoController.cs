@@ -102,5 +102,28 @@ namespace GymTecSQL_API.Controllers
 
             return NoContent();
         }
+
+        // Dentro de GymTecSQL_API.Controllers.EmpleadoController
+        [HttpGet("Authenticate")]
+        public IActionResult Authenticate([FromQuery] string correo, [FromQuery] string password)
+        {
+            if (string.IsNullOrWhiteSpace(correo) || string.IsNullOrWhiteSpace(password))
+                return BadRequest("Se requiere correo y contraseña.");
+
+            var empleado = _context.Empleado
+                .AsNoTracking()
+                .FirstOrDefault(e => e.CorreoEmpleado == correo && e.PasswordEmpleado == password);
+
+            if (empleado == null)
+                return Unauthorized("Credenciales inválidas.");
+
+            return Ok(new
+            {
+                empleado.CedulaEmpleado,
+                empleado.NombreEmpleado,
+                empleado.CorreoEmpleado
+            });
+        }
+
     }
 }

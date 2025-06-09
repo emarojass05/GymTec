@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GymTecSQL_API.Models;
@@ -10,87 +11,60 @@ namespace GymTecSQL_API.Controllers
     public class MaquinaController : ControllerBase
     {
         private readonly GymTecContext _context;
+        public MaquinaController(GymTecContext context) => _context = context;
 
-        public MaquinaController(GymTecContext context)
-        {
-            _context = context;
-        }
-
+        // GET: api/Maquina
         [HttpGet]
-        public IActionResult GetAll()
-        {
-            var maquinas = _context.Maquina.ToList();
-            return Ok(maquinas);
-        }
+        public async Task<ActionResult<IEnumerable<Maquina>>> GetAll()
+            => await _context.Maquina.ToListAsync();
 
+        // GET: api/Maquina/5
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public async Task<ActionResult<Maquina>> GetById(int id)
         {
-            var maquina = _context.Maquina.Find(id);
-            if (maquina == null)
-                return NotFound();
-            return Ok(maquina);
+            var m = await _context.Maquina.FindAsync(id);
+            if (m == null) return NotFound();
+            return m;
         }
 
+        // POST: api/Maquina
         [HttpPost]
-        public IActionResult Create([FromBody] Maquina item)
+        public async Task<ActionResult<Maquina>> Create([FromBody] Maquina item)
         {
-            if (item == null)
-                return BadRequest();
-
-            // (Opcional) verificar existencia de llaves foráneas:
-            // if (!_context.MarcaMaquina.Any(m => m.IdMarcaMaquina == item.IdMarcaMaquina))
-            //     return BadRequest($"MarcaMaquina {item.IdMarcaMaquina} no existe.");
-            // if (!_context.Sucursal.Any(s => s.IdSucursal == item.IdSucursal))
-            //     return BadRequest($"Sucursal {item.IdSucursal} no existe.");
-            // if (!_context.TipoEquipo.Any(te => te.IdTipoEquipo == item.IdTipoEquipo))
-            //     return BadRequest($"TipoEquipo {item.IdTipoEquipo} no existe.");
-
             _context.Maquina.Add(item);
-            _context.SaveChanges();
-
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = item.IdMaquina }, item);
         }
 
+        // PUT: api/Maquina/5
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] Maquina item)
+        public async Task<IActionResult> Update(int id, [FromBody] Maquina item)
         {
             if (item == null || item.IdMaquina != id)
                 return BadRequest();
 
-            var existing = _context.Maquina.Find(id);
+            var existing = await _context.Maquina.FindAsync(id);
             if (existing == null)
                 return NotFound();
 
-            // Actualizar campos
-            existing.IdMarcaMaquina = item.IdMarcaMaquina;
+            // Sólo actualizamos la sucursal
             existing.IdSucursal = item.IdSucursal;
-            existing.IdTipoEquipo = item.IdTipoEquipo;
+            // si quieres permitir cambiar también marca/tipo, añade:
+            // existing.IdMarcaMaquina = item.IdMarcaMaquina;
+            // existing.IdTipoEquipo    = item.IdTipoEquipo;
 
-            // (Opcional) validar llaves foráneas de nuevo:
-            // if (!_context.MarcaMaquina.Any(m => m.IdMarcaMaquina == existing.IdMarcaMaquina))
-            //     return BadRequest($"MarcaMaquina {existing.IdMarcaMaquina} no existe.");
-            // if (!_context.Sucursal.Any(s => s.IdSucursal == existing.IdSucursal))
-            //     return BadRequest($"Sucursal {existing.IdSucursal} no existe.");
-            // if (!_context.TipoEquipo.Any(te => te.IdTipoEquipo == existing.IdTipoEquipo))
-            //     return BadRequest($"TipoEquipo {existing.IdTipoEquipo} no existe.");
-
-            _context.Entry(existing).State = EntityState.Modified;
-            _context.SaveChanges();
-
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
+        // DELETE: api/Maquina/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var maquina = _context.Maquina.Find(id);
-            if (maquina == null)
-                return NotFound();
-
-            _context.Maquina.Remove(maquina);
-            _context.SaveChanges();
-
+            var m = await _context.Maquina.FindAsync(id);
+            if (m == null) return NotFound();
+            _context.Maquina.Remove(m);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

@@ -121,7 +121,8 @@ namespace GymTecSQL_API.Controllers
             {
                 empleado.CedulaEmpleado,
                 empleado.NombreEmpleado,
-                empleado.CorreoEmpleado
+                empleado.CorreoEmpleado,
+                empleado.IdPuesto
             });
         }
 

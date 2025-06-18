@@ -45,13 +45,13 @@ INSERT INTO "Sucursal"("DireccionSucursal","FechaApertura","HorarioAtencion") VA
 
 -- Clientes de ejemplo
 INSERT INTO "Cliente"("CedulaCliente","NombreCliente","ApellidosCliente","FechaNacimiento","PesoCliente","IMCCliente","DireccionCliente","CorreoCliente","PasswordCliente") VALUES
-  (100000001,'Juan','Pérez','1990-01-15 00:00:00-06',72.0,24.0,'Av. Central, San José','juan.perez@example.com',md5('pass123')),
-  (100000002,'María','González','1985-05-30 00:00:00-06',65.0,22.5,'Barrio Tournón, San José','maria.gonzalez@example.com',md5('pass456'));
+  (100000001,'Juan','Pérez','1990-01-15 00:00:00-06',72.0,24.0,'Av. Central, San José','juan.perez@example.com',md5('1234')),
+  (100000002,'María','González','1985-05-30 00:00:00-06',65.0,22.5,'Barrio Tournón, San José','maria.gonzalez@example.com',md5('1234'));
 
 -- Empleados de ejemplo
 INSERT INTO "Empleado"("CedulaEmpleado","NombreEmpleado","DireccionEmpleado","IdSucursal","IdPuesto","IdPlanilla","SalarioEmpleado","CorreoEmpleado","PasswordEmpleado") VALUES
-  (200000001,'Ana','Av. 2, San José',1,1,1,800.00,'ana@example.com',md5('admin1')),
-  (200000002,'Luis','Escazú Centro',2,2,2,600.00,'luis@example.com',md5('admin2'));
+  (200000001,'Ana','Av. 2, San José',1,1,1,800.00,'ana@gymtec',md5('admin')),
+  (200000002,'Luis','Escazú Centro',2,2,2,600.00,'luis@gymtec',md5('admin'));
 
 -- Spas
 INSERT INTO "Spa"("IdSucursal","EstadoSpa") VALUES

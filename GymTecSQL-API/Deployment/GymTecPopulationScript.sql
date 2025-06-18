@@ -50,8 +50,8 @@ INSERT INTO "Cliente"("CedulaCliente","NombreCliente","ApellidosCliente","FechaN
 
 -- Empleados de ejemplo
 INSERT INTO "Empleado"("CedulaEmpleado","NombreEmpleado","DireccionEmpleado","IdSucursal","IdPuesto","IdPlanilla","SalarioEmpleado","CorreoEmpleado","PasswordEmpleado") VALUES
-  (200000001,'Ana','Av. 2, San José',1,1,1,800.00,'ana@gymtec',md5('admin')),
-  (200000002,'Luis','Escazú Centro',2,2,2,600.00,'luis@gymtec',md5('admin'));
+  (200000001,'Ana','Av. 2, San José',1,1,1,800.00,'ana@gymtec.cr',md5('admin')),
+  (200000002,'Luis','Escazú Centro',2,2,2,600.00,'luis@gymtec.cr',md5('admin'));
 
 -- Spas
 INSERT INTO "Spa"("IdSucursal","EstadoSpa") VALUES

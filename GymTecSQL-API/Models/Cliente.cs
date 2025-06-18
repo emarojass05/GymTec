@@ -23,5 +23,7 @@ namespace GymTecSQL_API.Models
         public required string CorreoCliente { get; set; }
 
         public required string PasswordCliente { get; set; }
+
+        public int? IdInstructor { get; set; }
     }
 }

@@ -16,13 +16,35 @@ namespace GymTecSQL_API.Controllers
             _context = context;
         }
 
+        // Controllers/ClienteController.cs
+
         // GET: api/Cliente
         [HttpGet]
         public IActionResult GetAll()
         {
-            var clientes = _context.Cliente.ToList();
-            return Ok(clientes);
+            var lista = (
+                from c in _context.Cliente
+                join e in _context.Empleado
+                  on EF.Property<int?>(c, "IdInstructor") equals e.CedulaEmpleado
+                  into grp
+                from inst in grp.DefaultIfEmpty()
+                select new
+                {
+                    c.CedulaCliente,
+                    c.NombreCliente,
+                    c.ApellidosCliente,
+                    c.CorreoCliente,
+                    // incluimos IdInstructor en la respuesta:
+                    IdInstructor = EF.Property<int?>(c, "IdInstructor"),
+                    InstructorName = inst != null
+                        ? inst.NombreEmpleado 
+                        : "sin instructor"
+                }
+            ).ToList();
+
+            return Ok(lista);
         }
+
 
         // GET: api/Cliente/5
         [HttpGet("{id}")]
@@ -123,5 +145,27 @@ namespace GymTecSQL_API.Controllers
                 cliente.CorreoCliente
             });
         }
+        // POST api/Cliente/{cedula}/AsignarInstructor/{instructorId}
+
+        [HttpPost("{cedula}/AsignarInstructor/{instructorId}")]
+        [HttpGet("{cedula}/AsignarInstructor/{instructorId}")]
+        public IActionResult AsignarInstructor(int cedula, int instructorId)
+        {
+            var cliente = _context.Cliente.Find(cedula);
+            if (cliente == null)
+                return NotFound($"Cliente {cedula} no existe.");
+
+            var instructor = _context.Empleado.Find(instructorId);
+            if (instructor == null)
+                return NotFound($"Instructor {instructorId} no existe.");
+
+            cliente.IdInstructor = instructorId;
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+
     }
 }
+

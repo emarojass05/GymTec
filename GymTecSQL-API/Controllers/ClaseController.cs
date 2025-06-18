@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GymTecSQL_API.Models;
@@ -16,6 +17,7 @@ namespace GymTecSQL_API.Controllers
             _context = context;
         }
 
+        // GET: api/Clase
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -23,7 +25,8 @@ namespace GymTecSQL_API.Controllers
             return Ok(clases);
         }
 
-        [HttpGet("{id}")]
+        // GET: api/Clase/5
+        [HttpGet("{id:int}")]
         public IActionResult GetById(int id)
         {
             var clase = _context.Clase.Find(id);
@@ -32,15 +35,15 @@ namespace GymTecSQL_API.Controllers
             return Ok(clase);
         }
 
+        // POST: api/Clase
         [HttpPost]
         public IActionResult Create([FromBody] Clase item)
         {
             if (item == null)
                 return BadRequest();
 
-            // Si necesitas validar que la sucursal exista, puedes hacerlo aquí:
-            // if (!_context.Sucursal.Any(s => s.IdSucursal == item.IdSucursal))
-            //     return BadRequest($"Sucursal {item.IdSucursal} no existe.");
+            // Asegurar que FechaClase tenga Kind=Utc antes de guardar
+            item.FechaClase = DateTime.SpecifyKind(item.FechaClase, DateTimeKind.Utc);
 
             _context.Clase.Add(item);
             _context.SaveChanges();
@@ -48,7 +51,8 @@ namespace GymTecSQL_API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = item.IdClase }, item);
         }
 
-        [HttpPut("{id}")]
+        // PUT: api/Clase/5
+        [HttpPut("{id:int}")]
         public IActionResult Update(int id, [FromBody] Clase item)
         {
             if (item == null || item.IdClase != id)
@@ -58,12 +62,12 @@ namespace GymTecSQL_API.Controllers
             if (existing == null)
                 return NotFound();
 
-            // Actualizar campos
             existing.TipoClase = item.TipoClase;
             existing.IdInstructorClase = item.IdInstructorClase;
             existing.Grupal = item.Grupal;
             existing.CapacidadClase = item.CapacidadClase;
-            existing.FechaClase = item.FechaClase;
+            // Convertir FechaClase a UTC
+            existing.FechaClase = DateTime.SpecifyKind(item.FechaClase, DateTimeKind.Utc);
             existing.HoraInicioClase = item.HoraInicioClase;
             existing.HoraFinalizacionClase = item.HoraFinalizacionClase;
             existing.IdSucursal = item.IdSucursal;
@@ -74,7 +78,8 @@ namespace GymTecSQL_API.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
+        // DELETE: api/Clase/5
+        [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
             var clase = _context.Clase.Find(id);

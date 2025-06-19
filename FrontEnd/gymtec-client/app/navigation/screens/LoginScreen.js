@@ -24,7 +24,7 @@ export default function LoginScreen({ navigation }) {
 
     const hashedPassword = CryptoJS.MD5(password).toString();
     // Determinamos si es Empleado o Cliente según ruta
-    const entidad = correo.toLowerCase().includes('ins') ? 'Empleado' : 'Cliente';
+    const entidad = correo.toLowerCase().includes('gymtec.cr') ? 'Empleado' : 'Cliente';
     const storageKey = entidad === 'Empleado' ? 'cedulaEmpleado' : 'cedulaCliente';
 
     try {

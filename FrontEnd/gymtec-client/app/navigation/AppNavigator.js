@@ -1,3 +1,4 @@
+// app/navigation/AppNavigator.js
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import ClasesScreen from './screens/ClasesScreenCliente';
@@ -6,6 +7,8 @@ import LoginScreen from './screens/LoginScreen';
 import PerfilScreen from './screens/PerfilScreenCliente';
 import PlanScreen from './screens/PlanScreenCliente';
 import RegisterScreen from './screens/RegisterScreenCliente';
+
+import TestDB from './screens/TestDB';  // ← Import agregado para prueba de BD local
 
 // Instructor
 import ClasesInstructor from './screens/ClasesInstructor';
@@ -17,7 +20,7 @@ import PlanesInstructor from './screens/PlanesInstructor';
 // Administrador
 import CalendarioAdmin from './screens/CalendarioAdmin';
 import ConfiguracionGimnasioAdmin from './screens/ConfiguracionGimnasioAdmin';
-import CrearClasesAdmin from './screens/CrearClasesAdmin'; // ← Import agregado
+import CrearClasesAdmin from './screens/CrearClasesAdmin';
 import EmpleadosAdmin from './screens/EmpleadosAdmin';
 import GeneracionPlanillaAdmin from './screens/GeneracionPlanillaAdmin';
 import GimnasiosAdmin from './screens/GimnasiosAdmin';
@@ -36,7 +39,8 @@ const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Login">
+    //<Stack.Navigator initialRouteName="Login">
+     <Stack.Navigator initialRouteName="TestDB">
       {/* Login / Registro */}
       <Stack.Screen
         name="Login"
@@ -50,6 +54,13 @@ export default function AppNavigator() {
       <Stack.Screen name="Clases" component={ClasesScreen} />
       <Stack.Screen name="Plan" component={PlanScreen} />
       <Stack.Screen name="Perfil" component={PerfilScreen} />
+
+      {/* Prueba DB Local */}
+      <Stack.Screen
+        name="TestDB"
+        component={TestDB}
+        options={{ title: 'Test BD Local' }}
+      />
 
       {/* Instructor */}
       <Stack.Screen
@@ -140,7 +151,7 @@ export default function AppNavigator() {
         options={{ title: 'Configuración Gimnasio' }}
       />
       <Stack.Screen
-        name="CrearClasesAdmin"                // ← Pantalla registrada
+        name="CrearClasesAdmin"
         component={CrearClasesAdmin}
         options={{ title: 'Crear / Gestionar Clases' }}
       />

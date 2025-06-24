@@ -17,7 +17,6 @@ export default function HomePageAdmin({ navigation }) {
         ['Configuración Gimnasio', 'ConfiguracionGimnasioAdmin'],
         ['Generación de planilla', 'GeneracionPlanillaAdmin'],
         ['Calendario', 'CalendarioAdmin'],
-        ['Gimnasios', 'GimnasiosAdmin'],
       ].map(([label, screen]) => (
         <TouchableOpacity
           key={screen}

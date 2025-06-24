@@ -58,7 +58,7 @@ export default function PlanScreen() {
               inicio: clase.horaInicioClase,
               fin: clase.horaFinalizacionClase,
               instructorNombre: instructor
-                ? `${instructor.nombreEmpleado} ${instructor.apellidosEmpleado}`
+                ? `${instructor.nombreEmpleado}`
                 : 'N/D',
               sucursalDireccion: sucursal
                 ? sucursal.direccionSucursal

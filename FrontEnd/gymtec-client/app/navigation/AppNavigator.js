@@ -20,7 +20,6 @@ import ConfiguracionGimnasioAdmin from './screens/ConfiguracionGimnasioAdmin';
 import CrearClasesAdmin from './screens/CrearClasesAdmin'; // ← Import agregado
 import EmpleadosAdmin from './screens/EmpleadosAdmin';
 import GeneracionPlanillaAdmin from './screens/GeneracionPlanillaAdmin';
-import GimnasiosAdmin from './screens/GimnasiosAdmin';
 import HomePageAdmin from './screens/HomePageAdmin';
 import InventarioAdmin from './screens/InventarioAdmin';
 import PlanillasAdmin from './screens/PlanillasAdmin';
@@ -153,11 +152,6 @@ export default function AppNavigator() {
         name="CalendarioAdmin"
         component={CalendarioAdmin}
         options={{ title: 'Calendario' }}
-      />
-      <Stack.Screen
-        name="GimnasiosAdmin"
-        component={GimnasiosAdmin}
-        options={{ title: 'Gimnasios' }}
       />
     </Stack.Navigator>
   );

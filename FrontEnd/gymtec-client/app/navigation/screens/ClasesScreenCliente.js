@@ -54,9 +54,11 @@ export default function ClasesScreen() {
             fin:       c.horaFinalizacionClase,
             instructor:
               instructor
-                ? `${instructor.nombreEmpleado} ${instructor.apellidosEmpleado}`
+                ? `${instructor.nombreEmpleado}`
                 : 'N/D',
-            sucursal: sucursal?.direccionSucursal ?? ''
+            sucursal: sucursal?.direccionSucursal ?? '',
+            // Guardamos referencia al objeto completo de clase original para hacer PUT luego
+            _claseRaw: c
           };
         })
       );
@@ -82,14 +84,10 @@ export default function ClasesScreen() {
   }
 
   function confirmInscripcion(idClase) {
-    console.log('⏺ confirmInscripcion llamado para clase', idClase);
-
     if (Platform.OS === 'web') {
-      // en web usamos confirm()
       const ok = window.confirm('¿Seguro que te quieres registrar en esta clase?');
       if (ok) handleInscripcion(idClase);
     } else {
-      // en móvil usamos Alert.alert
       Alert.alert(
         'Confirmación',
         '¿Seguro que te quieres registrar en esta clase?',
@@ -110,9 +108,15 @@ export default function ClasesScreen() {
         return;
       }
 
-      const payload = { CedulaCliente: +cedula, IdClase: idClase };
-      console.log('Payload inscripción:', payload);
+      // Encuentra la info de la clase
+      const claseInfo = clasesInfo.find(ci => ci.id === idClase);
+      if (!claseInfo || claseInfo.capacidad <= 0) {
+        Alert.alert('Error', 'La clase no tiene cupos disponibles.');
+        return;
+      }
 
+      // 1. Anotar la asistencia
+      const payload = { CedulaCliente: +cedula, IdClase: idClase };
       const resp = await fetch(`${apiUrl}/AsistenciaClase`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,6 +124,31 @@ export default function ClasesScreen() {
       });
 
       if (resp.ok) {
+        // 2. Disminuir la capacidad (PUT)
+        const nuevaCapacidad = claseInfo.capacidad - 1;
+        const updatedClase = {
+          ...claseInfo._claseRaw,
+          capacidadClase: nuevaCapacidad
+        };
+        const putResp = await fetch(`${apiUrl}/Clase/${idClase}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedClase)
+        });
+
+        if (!putResp.ok) {
+          Alert.alert('Advertencia', 'La inscripción fue anotada, pero no se pudo actualizar la capacidad.');
+        }
+
+        // Actualiza la UI localmente
+        setClasesInfo(list =>
+          list.map(info =>
+            info.id === idClase
+              ? { ...info, capacidad: nuevaCapacidad, _claseRaw: { ...info._claseRaw, capacidadClase: nuevaCapacidad } }
+              : info
+          )
+        );
+
         Alert.alert('Éxito', 'Te has inscrito correctamente.');
       } else if (resp.status === 409) {
         const msg = await resp.text();

@@ -26,8 +26,15 @@ export default function SpaTratamientosAdmin() {
   const [selSucursal, setSelSucursal]       = useState(null);
   const [selTratamiento, setSelTratamiento] = useState(null);
 
-  const [modalNew, setModalNew]    = useState(false);
-  const [newTratamientoName, setNewTratamientoName] = useState('');
+  // Gestión de tratamientos
+  const [modalTrat, setModalTrat] = useState(false);
+  const [modalTratNew, setModalTratNew] = useState(false);
+  const [modalTratEdit, setModalTratEdit] = useState(false);
+  const [newTratName, setNewTratName] = useState('');
+  const [editTrat, setEditTrat] = useState(null);
+
+  const [modalNew, setModalNew]    = useState(false); // NO USADO en este código, puedes borrar si no usas modalNew
+  const [newTratamientoName, setNewTratamientoName] = useState(''); // NO USADO
 
   useEffect(() => {
     (async () => {
@@ -99,24 +106,64 @@ export default function SpaTratamientosAdmin() {
     }
   };
 
-  const handleAddNew = async () => {
-    if (!newTratamientoName.trim()) {
-      Alert.alert('Error','Ingrese nombre.');
+  // --- TRATAMIENTO CRUD ---
+  // Crear tratamiento
+  const handleTratCreate = async () => {
+    if (!newTratName.trim()) {
+      Alert.alert('Error', 'Ingrese nombre de tratamiento.');
       return;
     }
     try {
       const res = await fetch(`${apiUrl}/Tratamiento`, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ nombreTratamiento: newTratamientoName })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombreTratamiento: newTratName.trim() })
       });
       if (!res.ok) throw new Error();
       const created = await res.json();
-      setTratamientos(t => [...t, created]);
-      setNewTratamientoName('');
-      setModalNew(false);
-    } catch {
-      Alert.alert('Error','No se pudo crear.');
+      setTratamientos(list => [...list, created]);
+      setNewTratName('');
+      setModalTratNew(false);
+    } catch (err) {
+      Alert.alert('Error', 'No se pudo crear tratamiento.');
+    }
+  };
+
+  // Editar tratamiento
+  const handleTratUpdate = async () => {
+    if (!editTrat.nombreTratamiento.trim()) {
+      Alert.alert('Error', 'Nombre no puede quedar vacío.');
+      return;
+    }
+    try {
+      const res = await fetch(`${apiUrl}/Tratamiento/${editTrat.idTratamiento}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editTrat)
+      });
+      if (!res.ok) throw new Error();
+      setTratamientos(list =>
+        list.map(t =>
+          t.idTratamiento === editTrat.idTratamiento
+            ? { ...t, nombreTratamiento: editTrat.nombreTratamiento }
+            : t
+        )
+      );
+      setModalTratEdit(false);
+      setEditTrat(null);
+    } catch (err) {
+      Alert.alert('Error', 'No se pudo actualizar tratamiento.');
+    }
+  };
+
+  // Eliminar tratamiento
+  const handleTratDelete = async id => {
+    try {
+      const res = await fetch(`${apiUrl}/Tratamiento/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setTratamientos(list => list.filter(t => t.idTratamiento !== id));
+    } catch (err) {
+      Alert.alert('Error', 'No se pudo eliminar tratamiento. Puede estar protegido o en uso.');
     }
   };
 
@@ -163,12 +210,12 @@ export default function SpaTratamientosAdmin() {
         <Text style={styles.addButtonText}>＋</Text>
       </TouchableOpacity>
 
-      {/* Botón añadir nuevo tratamiento */}
+      {/* Botón Gestión de Tratamientos */}
       <TouchableOpacity
-        style={[styles.addButton, {right: 20}]}
-        onPress={()=>setModalNew(true)}
+        style={[styles.addButton, {right: 180, backgroundColor: '#43b04c'}]}
+        onPress={() => setModalTrat(true)}
       >
-        <Text style={styles.addButtonText}>Aa</Text>
+        <Text style={styles.addButtonText}>Tratamientos</Text>
       </TouchableOpacity>
 
       {/* Modal Relación */}
@@ -216,21 +263,62 @@ export default function SpaTratamientosAdmin() {
         </View>
       </Modal>
 
-      {/* Modal Nuevo Tratamiento */}
-      <Modal visible={modalNew} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Nuevo Tratamiento</Text>
-            <TextInput
-              placeholder="Nombre"
-              style={styles.input}
-              value={newTratamientoName}
-              onChangeText={setNewTratamientoName}
-            />
-            <View style={styles.modalButtons}>
-              <Button title="Cancelar" onPress={()=>setModalNew(false)} />
-              <Button title="Aceptar" onPress={handleAddNew} />
+      {/* Modal gestión tratamientos */}
+      <Modal visible={modalTrat} animationType="slide">
+        <ScrollView contentContainerStyle={styles.modalContent}>
+          <Text style={styles.modalTitle}>Gestión de Tratamientos</Text>
+          {tratamientos.map(t => (
+            <View key={t.idTratamiento} style={styles.tratItem}>
+              <Text>{t.nombreTratamiento}</Text>
+              <View style={{ flexDirection: 'row' }}>
+                <Button
+                  title="Editar"
+                  onPress={() => { setEditTrat(t); setModalTratEdit(true); }}
+                />
+                <Button
+                  title="Eliminar"
+                  onPress={() => handleTratDelete(t.idTratamiento)}
+                />
+              </View>
             </View>
+          ))}
+          <View style={styles.modalButtons}>
+            <Button title="Añadir" onPress={() => setModalTratNew(true)} />
+            <Button title="Cerrar" onPress={() => setModalTrat(false)} />
+          </View>
+        </ScrollView>
+      </Modal>
+
+      {/* Modal: Nuevo Tratamiento */}
+      <Modal visible={modalTratNew} animationType="slide">
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Nuevo Tratamiento</Text>
+          <TextInput
+            placeholder="Nombre de Tratamiento"
+            style={styles.input}
+            value={newTratName}
+            onChangeText={setNewTratName}
+          />
+          <View style={styles.modalButtons}>
+            <Button title="Cancelar" onPress={() => setModalTratNew(false)} />
+            <Button title="Crear" onPress={handleTratCreate} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal: Editar Tratamiento */}
+      <Modal visible={modalTratEdit} animationType="slide">
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Editar Tratamiento</Text>
+          <TextInput
+            placeholder="Nombre de Tratamiento"
+            style={styles.input}
+            value={editTrat?.nombreTratamiento ?? ''}
+            onChangeText={text => setEditTrat(et => ({ ...et, nombreTratamiento: text }))}
+          />
+          <View style={styles.modalButtons}>
+            <Button title="Cancelar" onPress={() => setModalTratEdit(false)} />
+            <Button title="Guardar" onPress={handleTratUpdate} />
           </View>
         </View>
       </Modal>
@@ -258,11 +346,10 @@ const styles = StyleSheet.create({
     borderRadius:4
   },
   deleteText:{ color:'#fff' },
-
   addButton: {
     position:'absolute',
     bottom:24,
-    width:56,
+    width:100,
     height:56,
     borderRadius:28,
     justifyContent:'center',
@@ -274,8 +361,7 @@ const styles = StyleSheet.create({
     shadowRadius:4,
     elevation:5
   },
-  addButtonText:{ color:'#fff', fontSize:24, fontWeight:'bold' },
-
+  addButtonText:{ color:'#fff', fontSize:16, fontWeight:'bold' },
   modalOverlay:{
     flex:1,
     backgroundColor:'rgba(0,0,0,0.5)',
@@ -286,7 +372,9 @@ const styles = StyleSheet.create({
     backgroundColor:'#fff',
     borderRadius:8,
     padding:16,
-    maxHeight:'80%'
+    maxHeight:'80%',
+    flex: 1,
+    justifyContent: 'center'
   },
   modalTitle:{ fontSize:18, fontWeight:'bold', marginBottom:12 },
   modalLabel:{ fontWeight:'600', marginTop:8 },
@@ -303,7 +391,9 @@ const styles = StyleSheet.create({
     borderColor:'#ccc',
     borderRadius:6,
     padding:8,
-    marginTop:8
+    marginTop:8,
+    marginBottom:12
   },
-  empty:{ textAlign:'center', marginTop:20 }
+  empty:{ textAlign:'center', marginTop:20 },
+  tratItem: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingVertical:8 }
 });

@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Button,
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Button,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { apiUrl } from '../../../utils';
 
@@ -19,6 +19,10 @@ export default function PuestosAdmin() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [newDescripcion, setNewDescripcion] = useState('');
+
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editDescripcion, setEditDescripcion] = useState('');
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     fetchPuestos();
@@ -30,8 +34,7 @@ export default function PuestosAdmin() {
       const res = await fetch(`${apiUrl}/Puesto`);
       const data = await res.json();
       setPuestos(data);
-    } catch (err) {
-      console.error(err);
+    } catch {
       Alert.alert('Error', 'No se pudo cargar los puestos.');
     } finally {
       setLoading(false);
@@ -70,6 +73,34 @@ export default function PuestosAdmin() {
     }
   };
 
+  const openEditModal = (id, desc) => {
+    setEditId(id);
+    setEditDescripcion(desc);
+    setEditModalVisible(true);
+  };
+
+  const handleEditSave = async () => {
+    const desc = editDescripcion.trim();
+    if (!desc) {
+      Alert.alert('Error', 'Ingrese una descripción.');
+      return;
+    }
+    try {
+      const res = await fetch(`${apiUrl}/Puesto/${editId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idPuesto: editId, descripcionPuesto: desc })
+      });
+      if (!res.ok) throw new Error();
+      setPuestos(ps => ps.map(p => p.idPuesto === editId ? { ...p, descripcionPuesto: desc } : p));
+      setEditModalVisible(false);
+      setEditId(null);
+      setEditDescripcion('');
+    } catch {
+      Alert.alert('Error', 'No se pudo actualizar el puesto.');
+    }
+  };
+
   if (loading) {
     return <ActivityIndicator style={styles.center} size="large" />;
   }
@@ -82,16 +113,20 @@ export default function PuestosAdmin() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.text}>{item.descripcionPuesto}</Text>
-            {item.idPuesto > 4 ? (
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDelete(item.idPuesto)}
-              >
-                <Text style={styles.deleteText}>Eliminar</Text>
-              </TouchableOpacity>
-            ) : (
-              <Text style={styles.lockedText}>Fijo</Text>
-            )}
+            <View style={styles.actions}>
+              {item.idPuesto > 4 && (
+                <TouchableOpacity style={styles.editButton} onPress={() => openEditModal(item.idPuesto, item.descripcionPuesto)}>
+                  <Text style={styles.editText}>Editar</Text>
+                </TouchableOpacity>
+              )}
+              {item.idPuesto > 4 ? (
+                <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.idPuesto)}>
+                  <Text style={styles.deleteText}>Eliminar</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.lockedText}>Fijo</Text>
+              )}
+            </View>
           </View>
         )}
         ListEmptyComponent={<Text style={styles.empty}>No hay puestos.</Text>}
@@ -104,11 +139,7 @@ export default function PuestosAdmin() {
         <Text style={styles.addButtonText}>＋</Text>
       </TouchableOpacity>
 
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent
-      >
+      <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Nuevo Puesto</Text>
@@ -121,6 +152,23 @@ export default function PuestosAdmin() {
             <View style={styles.modalButtons}>
               <Button title="Cancelar" onPress={() => setModalVisible(false)} />
               <Button title="Crear" onPress={handleAdd} />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={editModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Editar Puesto</Text>
+            <TextInput
+              style={styles.input}
+              value={editDescripcion}
+              onChangeText={setEditDescripcion}
+            />
+            <View style={styles.modalButtons}>
+              <Button title="Cancelar" onPress={() => setEditModalVisible(false)} />
+              <Button title="Guardar" onPress={handleEditSave} />
             </View>
           </View>
         </View>
@@ -142,16 +190,13 @@ const styles = StyleSheet.create({
                  borderRadius: 6
                },
   text:        { fontSize: 16, flex: 1 },
-  deleteButton:{
-                 backgroundColor: '#FF3B30',
-                 paddingVertical: 4,
-                 paddingHorizontal: 8,
-                 borderRadius: 4
-               },
+  actions:     { flexDirection: 'row', alignItems: 'center' },
+  deleteButton:{ backgroundColor: '#FF3B30', padding: 8, borderRadius: 4, marginLeft: 8 },
   deleteText:  { color: '#fff' },
+  editButton:  { backgroundColor: '#007AFF', padding: 8, borderRadius: 4 },
+  editText:    { color: '#fff' },
   lockedText:  { color: '#999', fontStyle: 'italic' },
   empty:       { textAlign: 'center', marginTop: 20 },
-
   addButton:   {
                  position: 'absolute',
                  bottom: 24,
@@ -169,28 +214,9 @@ const styles = StyleSheet.create({
                  elevation: 5
                },
   addButtonText:{ color: '#fff', fontSize: 32 },
-
-  modalOverlay:{
-                 flex: 1,
-                 backgroundColor: 'rgba(0,0,0,0.5)',
-                 justifyContent: 'center',
-                 padding: 20
-               },
-  modalContent:{
-                 backgroundColor: '#fff',
-                 borderRadius: 8,
-                 padding: 16
-               },
+  modalOverlay:{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
+  modalContent:{ backgroundColor: '#fff', borderRadius: 8, padding: 16 },
   modalTitle:  { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-  input:       {
-                 borderWidth: 1,
-                 borderColor: '#ccc',
-                 borderRadius: 6,
-                 padding: 8,
-                 marginBottom: 12
-               },
-  modalButtons:{
-                 flexDirection: 'row',
-                 justifyContent: 'space-between'
-               }
+  input:       { borderWidth: 1, borderColor: '#ccc', borderRadius: 6, padding: 8, marginBottom: 12 },
+  modalButtons:{ flexDirection: 'row', justifyContent: 'space-between' }
 });

@@ -50,11 +50,6 @@ export default function EmpleadosAdmin() {
         const [eData, sData, pData, plData] = await Promise.all([
           eRes.json(), sRes.json(), pRes.json(), plRes.json()
         ]);
-        console.log('empleados', eData);
-        console.log('sucursales', sData);
-        console.log('puestos', pData);
-        console.log('planillas', plData);
-
         setEmpleados(eData);
         setSucursales(sData);
         setPuestos(pData);
@@ -67,6 +62,16 @@ export default function EmpleadosAdmin() {
       }
     })();
   }, []);
+
+  const handleDelete = async (cedula) => {
+    try {
+      const res = await fetch(`${apiUrl}/Empleado/${cedula}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setEmpleados(list => list.filter(e => e.cedulaEmpleado !== cedula));
+    } catch {
+      Alert.alert('Error', 'No se pudo eliminar el empleado.');
+    }
+  };
 
   if (loading) {
     return (
@@ -88,7 +93,15 @@ export default function EmpleadosAdmin() {
           setModalEdit(true);
         }}
       >
-        <Text style={styles.name}>{item.nombreEmpleado}</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.name}>{item.nombreEmpleado}</Text>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDelete(item.cedulaEmpleado)}
+          >
+            <Text style={styles.deleteText}>Eliminar</Text>
+          </TouchableOpacity>
+        </View>
         <Text>Cédula: {item.cedulaEmpleado}</Text>
         <Text>Dirección: {item.direccionEmpleado}</Text>
         <Text>Correo: {item.correoEmpleado}</Text>
@@ -154,6 +167,21 @@ export default function EmpleadosAdmin() {
                     editEmp.idPuesto === p.idPuesto && styles.selected
                   ]}>
                     {p.descripcionPuesto}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              <Text style={styles.label}>Planilla</Text>
+              {planillas.map(pl => (
+                <TouchableOpacity
+                  key={pl.idPlanilla}
+                  onPress={() => setEditEmp(e => ({ ...e, idPlanilla: pl.idPlanilla }))}
+                >
+                  <Text style={[
+                    styles.option,
+                    editEmp.idPlanilla === pl.idPlanilla && styles.selected
+                  ]}>
+                    {pl.descripcionPlanilla}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -291,7 +319,6 @@ export default function EmpleadosAdmin() {
           <View style={styles.modalButtons}>
             <Button title="Cancelar" onPress={() => setModalNew(false)} />
             <Button title="Crear" onPress={async () => {
-              // validar campos...
               const ne = {
                 ...newEmp,
                 salarioEmpleado: parseFloat(newEmp.salarioEmpleado)
@@ -339,48 +366,19 @@ export default function EmpleadosAdmin() {
 const styles = StyleSheet.create({
   center:        { flex:1, justifyContent:'center', alignItems:'center' },
   container:     { flex:1, backgroundColor:'#fff' },
-  card:          {
-                   padding:16,
-                   margin:12,
-                   backgroundColor:'#fafafa',
-                   borderRadius:6
-                 },
+  card:          { padding:16, margin:12, backgroundColor:'#fafafa', borderRadius:6 },
+  cardHeader:    { flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
   name:          { fontSize:18, fontWeight:'600', marginBottom:4 },
+  deleteButton:  { backgroundColor:'#FF3B30', padding:6, borderRadius:4 },
+  deleteText:    { color:'#fff' },
   empty:         { textAlign:'center', marginTop:20 },
-
-  addButton:     {
-                   position:'absolute',
-                   bottom:24,
-                   right:24,
-                   width:56,
-                   height:56,
-                   borderRadius:28,
-                   backgroundColor:'#007AFF',
-                   justifyContent:'center',
-                   alignItems:'center',
-                   shadowColor:'#000',
-                   shadowOpacity:0.3,
-                   shadowOffset:{ width:0, height:2 },
-                   shadowRadius:4,
-                   elevation:5
-                 },
+  addButton:     { position:'absolute', bottom:24, right:24, width:56, height:56, borderRadius:28, backgroundColor:'#007AFF', justifyContent:'center', alignItems:'center', shadowColor:'#000', shadowOpacity:0.3, shadowOffset:{ width:0, height:2 }, shadowRadius:4, elevation:5 },
   addButtonText: { color:'#fff', fontSize:32 },
-
   modalContent:  { padding:20, backgroundColor:'#fff' },
   modalTitle:    { fontSize:20, fontWeight:'bold', marginBottom:12 },
   label:         { marginTop:12, fontWeight:'600' },
-  input:         {
-                   borderWidth:1,
-                   borderColor:'#ccc',
-                   borderRadius:6,
-                   padding:8,
-                   marginBottom:12
-                 },
+  input:         { borderWidth:1, borderColor:'#ccc', borderRadius:6, padding:8, marginBottom:12 },
   option:        { padding:8 },
   selected:      { color:'#007AFF', fontWeight:'bold' },
-  modalButtons:  {
-                   flexDirection:'row',
-                   justifyContent:'space-between',
-                   marginTop:20
-                 }
+  modalButtons:  { flexDirection:'row', justifyContent:'space-between', marginTop:20 }
 });

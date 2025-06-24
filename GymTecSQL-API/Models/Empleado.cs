@@ -12,7 +12,7 @@ namespace GymTecSQL_API.Models
 
         public required string DireccionEmpleado { get; set; }
 
-        public required int IdSucursal { get; set; }
+        public int? IdSucursal { get; set; }
 
         public required int IdPuesto { get; set; }
 

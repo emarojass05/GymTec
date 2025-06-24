@@ -16,13 +16,21 @@ namespace GymTecSQL_API.Controllers
             _context = context;
         }
 
+        // GET: api/Tienda?idsucursal=5
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] int? idsucursal)
         {
-            var tiendas = _context.Tienda.ToList();
-            return Ok(tiendas);
+            if (idsucursal.HasValue)
+            {
+                var filtered = _context.Tienda
+                    .Where(t => t.IdSucursal == idsucursal.Value)
+                    .ToList();
+                return Ok(filtered);
+            }
+            return Ok(_context.Tienda.ToList());
         }
 
+        // GET: api/Tienda/10
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -32,17 +40,12 @@ namespace GymTecSQL_API.Controllers
             return Ok(tienda);
         }
 
+        // POST: api/Tienda
         [HttpPost]
         public IActionResult Create([FromBody] Tienda item)
         {
             if (item == null)
                 return BadRequest();
-
-            // (Opcional) validar llaves foráneas:
-            // if (!_context.Estado.Any(e => e.IdEstado == item.EstadoTienda))
-            //     return BadRequest($"Estado {item.EstadoTienda} no existe.");
-            // if (!_context.Sucursal.Any(s => s.IdSucursal == item.IdSucursal))
-            //     return BadRequest($"Sucursal {item.IdSucursal} no existe.");
 
             _context.Tienda.Add(item);
             _context.SaveChanges();
@@ -50,6 +53,7 @@ namespace GymTecSQL_API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = item.IdTienda }, item);
         }
 
+        // PUT: api/Tienda/10
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] Tienda item)
         {
@@ -63,18 +67,13 @@ namespace GymTecSQL_API.Controllers
             existing.EstadoTienda = item.EstadoTienda;
             existing.IdSucursal = item.IdSucursal;
 
-            // (Opcional) validar llaves foráneas de nuevo:
-            // if (!_context.Estado.Any(e => e.IdEstado == existing.EstadoTienda))
-            //     return BadRequest($"Estado {existing.EstadoTienda} no existe.");
-            // if (!_context.Sucursal.Any(s => s.IdSucursal == existing.IdSucursal))
-            //     return BadRequest($"Sucursal {existing.IdSucursal} no existe.");
-
             _context.Entry(existing).State = EntityState.Modified;
             _context.SaveChanges();
 
             return NoContent();
         }
 
+        // DELETE: api/Tienda/10
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

@@ -21,6 +21,7 @@ namespace GymTecSQL_API.Models
         public DbSet<Spa> Spa { get; set; }
         public DbSet<SpaTratamiento> SpaTratamiento { get; set; }
         public DbSet<Sucursal> Sucursal { get; set; }
+        public DbSet<TelefonoSucursal> TelefonoSucursal { get; set; } 
         public DbSet<Tienda> Tienda { get; set; }
         public DbSet<TiendaProducto> TiendaProducto { get; set; }
         public DbSet<TipoEquipo> TipoEquipo { get; set; }
@@ -181,6 +182,11 @@ namespace GymTecSQL_API.Models
             // Clave primaria
             modelBuilder.Entity<Sucursal>()
                 .HasKey(s => s.IdSucursal);
+
+            // --- Telefono sucursal
+            // Clave primaria
+            modelBuilder.Entity<TelefonoSucursal>()
+                .HasKey(ts => new { ts.Telefono, ts.IdSucursal });
 
             // --- Tienda
             // Clave primaria

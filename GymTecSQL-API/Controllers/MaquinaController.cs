@@ -28,11 +28,16 @@ namespace GymTecSQL_API.Controllers
         }
 
         // POST: api/Maquina
+        // Ahora acepta item.IdMaquina, item.IdMarcaMaquina, item.IdTipoEquipo, item.IdSucursal (nullable)
         [HttpPost]
         public async Task<ActionResult<Maquina>> Create([FromBody] Maquina item)
         {
+            if (item == null)
+                return BadRequest();
+
             _context.Maquina.Add(item);
             await _context.SaveChangesAsync();
+
             return CreatedAtAction(nameof(GetById), new { id = item.IdMaquina }, item);
         }
 
@@ -47,11 +52,9 @@ namespace GymTecSQL_API.Controllers
             if (existing == null)
                 return NotFound();
 
-            // Sólo actualizamos la sucursal
-            existing.IdSucursal = item.IdSucursal;
-            // si quieres permitir cambiar también marca/tipo, añade:
-            // existing.IdMarcaMaquina = item.IdMarcaMaquina;
-            // existing.IdTipoEquipo    = item.IdTipoEquipo;
+            existing.IdMarcaMaquina = item.IdMarcaMaquina;
+            existing.IdTipoEquipo = item.IdTipoEquipo;
+            existing.IdSucursal = item.IdSucursal;  // ahora puede ser null
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -63,6 +66,7 @@ namespace GymTecSQL_API.Controllers
         {
             var m = await _context.Maquina.FindAsync(id);
             if (m == null) return NotFound();
+
             _context.Maquina.Remove(m);
             await _context.SaveChangesAsync();
             return NoContent();

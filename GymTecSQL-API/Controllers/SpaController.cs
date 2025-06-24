@@ -16,13 +16,21 @@ namespace GymTecSQL_API.Controllers
             _context = context;
         }
 
+        // GET: api/Spa?idsucursal=5
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] int? idsucursal)
         {
-            var spas = _context.Spa.ToList();
-            return Ok(spas);
+            if (idsucursal.HasValue)
+            {
+                var filtered = _context.Spa
+                    .Where(s => s.IdSucursal == idsucursal.Value)
+                    .ToList();
+                return Ok(filtered);
+            }
+            return Ok(_context.Spa.ToList());
         }
 
+        // GET: api/Spa/10
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -32,17 +40,16 @@ namespace GymTecSQL_API.Controllers
             return Ok(spa);
         }
 
+        // POST: api/Spa
         [HttpPost]
         public IActionResult Create([FromBody] Spa item)
         {
             if (item == null)
                 return BadRequest();
 
-            // (Opcional) validar existencia de Sucursal y Estado:
-            // if (!_context.Sucursal.Any(s => s.IdSucursal == item.IdSucursal))
-            //     return BadRequest($"Sucursal {item.IdSucursal} no existe.");
-            // if (!_context.Estado.Any(e => e.IdEstado == item.EstadoSpa))
-            //     return BadRequest($"Estado {item.EstadoSpa} no existe.");
+            // (Opcional) Validar existencia de Sucursal y Estado
+            // if (!_context.Sucursal.Any(s => s.IdSucursal == item.IdSucursal)) return BadRequest();
+            // if (!_context.Estado.Any(e => e.IdEstado == item.EstadoSpa)) return BadRequest();
 
             _context.Spa.Add(item);
             _context.SaveChanges();
@@ -50,6 +57,7 @@ namespace GymTecSQL_API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = item.IdSpa }, item);
         }
 
+        // PUT: api/Spa/10
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] Spa item)
         {
@@ -60,14 +68,11 @@ namespace GymTecSQL_API.Controllers
             if (existing == null)
                 return NotFound();
 
-            existing.IdSucursal = item.IdSucursal;
             existing.EstadoSpa = item.EstadoSpa;
 
-            // (Opcional) validar que las llaves foráneas aún existan:
-            // if (!_context.Sucursal.Any(s => s.IdSucursal == existing.IdSucursal))
-            //     return BadRequest($"Sucursal {existing.IdSucursal} no existe.");
-            // if (!_context.Estado.Any(e => e.IdEstado == existing.EstadoSpa))
-            //     return BadRequest($"Estado {existing.EstadoSpa} no existe.");
+            // (Opcional) Validar que las llaves foráneas aún existan
+            // if (!_context.Sucursal.Any(s => s.IdSucursal == existing.IdSucursal)) return BadRequest();
+            // if (!_context.Estado.Any(e => e.IdEstado == existing.EstadoSpa)) return BadRequest();
 
             _context.Entry(existing).State = EntityState.Modified;
             _context.SaveChanges();
@@ -75,6 +80,7 @@ namespace GymTecSQL_API.Controllers
             return NoContent();
         }
 
+        // DELETE: api/Spa/10
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

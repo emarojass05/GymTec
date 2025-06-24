@@ -1,3 +1,4 @@
+import CryptoJS from 'crypto-js';
 import { useEffect, useState } from 'react'; 
 import {
     ActivityIndicator,
@@ -24,6 +25,8 @@ export default function EmpleadosAdmin() {
   // — editar empleado —
   const [modalEdit, setModalEdit]   = useState(false);
   const [editEmp, setEditEmp]       = useState(null);
+  const [editEmpPwd, setEditEmpPwd] = useState(''); // Para el input visible
+
   // — nuevo empleado —
   const [modalNew, setModalNew]     = useState(false);
   const [newEmp, setNewEmp]         = useState({
@@ -90,6 +93,7 @@ export default function EmpleadosAdmin() {
         style={styles.card}
         onPress={() => {
           setEditEmp({ ...item, salarioEmpleado: item.salarioEmpleado.toString() });
+          setEditEmpPwd(''); // limpia el campo de contraseña al editar
           setModalEdit(true);
         }}
       >
@@ -141,6 +145,32 @@ export default function EmpleadosAdmin() {
           <Text style={styles.modalTitle}>Editar Empleado</Text>
           {editEmp && (
             <>
+              <TextInput
+                placeholder="Nombre"
+                style={styles.input}
+                value={editEmp.nombreEmpleado}
+                onChangeText={text => setEditEmp(e => ({ ...e, nombreEmpleado: text }))}
+              />
+              <TextInput
+                placeholder="Dirección"
+                style={styles.input}
+                value={editEmp.direccionEmpleado}
+                onChangeText={text => setEditEmp(e => ({ ...e, direccionEmpleado: text }))}
+              />
+              <TextInput
+                placeholder="Correo"
+                style={styles.input}
+                value={editEmp.correoEmpleado}
+                onChangeText={text => setEditEmp(e => ({ ...e, correoEmpleado: text }))}
+              />
+              <TextInput
+                placeholder="Contraseña (dejar vacío para no cambiar)"
+                style={styles.input}
+                secureTextEntry
+                value={editEmpPwd}
+                onChangeText={setEditEmpPwd}
+              />
+
               <Text style={styles.label}>Sucursal</Text>
               <TouchableOpacity
                 onPress={() => setEditEmp(e => ({ ...e, idSucursal: null }))}
@@ -206,10 +236,14 @@ export default function EmpleadosAdmin() {
                 <Button
                   title="Guardar"
                   onPress={async () => {
-                    const emp = {
+                    let emp = {
                       ...editEmp,
                       salarioEmpleado: parseFloat(editEmp.salarioEmpleado)
                     };
+                    // Solo hashea si el usuario escribió algo nuevo en el campo
+                    if (editEmpPwd.trim().length > 0) {
+                      emp.passwordEmpleado = CryptoJS.MD5(editEmpPwd).toString();
+                    }
                     try {
                       const res = await fetch(`${apiUrl}/Empleado/${emp.cedulaEmpleado}`, {
                         method: 'PUT',
@@ -351,6 +385,7 @@ export default function EmpleadosAdmin() {
                 return;
               }
               try {
+                ne.passwordEmpleado = CryptoJS.MD5(ne.passwordEmpleado).toString()
                 const res = await fetch(`${apiUrl}/Empleado`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },

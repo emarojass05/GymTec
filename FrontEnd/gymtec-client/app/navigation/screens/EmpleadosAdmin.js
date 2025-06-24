@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'; 
 import {
     ActivityIndicator,
     Alert,
@@ -105,7 +105,7 @@ export default function EmpleadosAdmin() {
         <Text>Cédula: {item.cedulaEmpleado}</Text>
         <Text>Dirección: {item.direccionEmpleado}</Text>
         <Text>Correo: {item.correoEmpleado}</Text>
-        <Text>Sucursal: {suc?.direccionSucursal}</Text>
+        <Text>Sucursal: {suc?.direccionSucursal ?? 'Sin asignar'}</Text>
         <Text>Puesto: {pst?.descripcionPuesto}</Text>
         <Text>Planilla: {pl?.descripcionPlanilla}</Text>
         <Text>Salario: ₡{item.salarioEmpleado}</Text>
@@ -142,6 +142,13 @@ export default function EmpleadosAdmin() {
           {editEmp && (
             <>
               <Text style={styles.label}>Sucursal</Text>
+              <TouchableOpacity
+                onPress={() => setEditEmp(e => ({ ...e, idSucursal: null }))}
+              >
+                <Text style={[styles.option, editEmp.idSucursal === null && styles.selected]}>
+                  Sin asignar
+                </Text>
+              </TouchableOpacity>
               {sucursales.map(s => (
                 <TouchableOpacity
                   key={s.idSucursal}
@@ -264,6 +271,13 @@ export default function EmpleadosAdmin() {
           />
 
           <Text style={styles.label}>Sucursal</Text>
+          <TouchableOpacity
+            onPress={() => setNewEmp(ne => ({ ...ne, idSucursal: null }))}
+          >
+            <Text style={[styles.option, newEmp.idSucursal === null && styles.selected]}>
+              Sin asignar
+            </Text>
+          </TouchableOpacity>
           {sucursales.map(s => (
             <TouchableOpacity
               key={s.idSucursal}
@@ -329,7 +343,6 @@ export default function EmpleadosAdmin() {
                 !ne.direccionEmpleado ||
                 !ne.correoEmpleado ||
                 !ne.passwordEmpleado ||
-                !ne.idSucursal ||
                 !ne.idPuesto ||
                 !ne.idPlanilla ||
                 isNaN(ne.salarioEmpleado)

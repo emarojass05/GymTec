@@ -33,10 +33,10 @@ export default function InventarioAdmin() {
 
   // Crear nueva
   const [modalNew, setModalNew]       = useState(false);
-  const [newMachine, setNewMachine]   = useState({ idMarcaMaquina: null, idTipoEquipo: null });
+  const [newMachine, setNewMachine]   = useState({ idMaquina: '', idMarcaMaquina: null, idTipoEquipo: null });
   const [newSucursal, setNewSucursal] = useState(null);
 
-  // GESTIÓN DE MARCAS
+  // Gestión de marcas
   const [modalMarca, setModalMarca]           = useState(false);
   const [modalMarcaNew, setModalMarcaNew]     = useState(false);
   const [modalMarcaEdit, setModalMarcaEdit]   = useState(false);
@@ -79,7 +79,7 @@ export default function InventarioAdmin() {
     }
   };
 
-  // Reasignar sucursal
+  // Actualizar máquina existente
   const handleSave = async () => {
     try {
       const payload = {
@@ -97,17 +97,20 @@ export default function InventarioAdmin() {
       setMaquinas(list =>
         list.map(m =>
           m.idMaquina === selMachine.idMaquina
-            ? { ...m, idSucursal: selSucursal }
+            ? { ...m,
+                idMarcaMaquina: selMachine.idMarcaMaquina,
+                idTipoEquipo:   selMachine.idTipoEquipo,
+                idSucursal:     selSucursal }
             : m
         )
       );
       setModalEdit(false);
     } catch {
-      Alert.alert('Error', 'No se pudo reasignar.');
+      Alert.alert('Error', 'No se pudo actualizar máquina.');
     }
   };
 
-  // Eliminar
+  // Eliminar máquina
   const handleDelete = async id => {
     try {
       const res = await fetch(`${apiUrl}/Maquina/${id}`, { method: 'DELETE' });
@@ -118,19 +121,21 @@ export default function InventarioAdmin() {
     }
   };
 
-  // Crear nueva máquina (usa POST Sucursal/{id})
+  // Crear nueva máquina
   const handleCreate = async () => {
-    if (!newMachine.idMarcaMaquina || !newMachine.idTipoEquipo || !newSucursal) {
-      Alert.alert('Error', 'Complete marca, tipo y sucursal.');
+    if (!newMachine.idMaquina.trim() || !newMachine.idMarcaMaquina || !newMachine.idTipoEquipo) {
+      Alert.alert('Error', 'Complete serial, marca y tipo.');
       return;
     }
     try {
       const body = {
+        idMaquina:      parseInt(newMachine.idMaquina, 10),
         idMarcaMaquina: newMachine.idMarcaMaquina,
-        idTipoEquipo:   newMachine.idTipoEquipo
+        idTipoEquipo:   newMachine.idTipoEquipo,
+        idSucursal:     newSucursal // puede ser null
       };
       const res = await fetch(
-        `${apiUrl}/Maquina/Sucursal/${newSucursal}`,
+        `${apiUrl}/Maquina`,
         {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
@@ -141,7 +146,7 @@ export default function InventarioAdmin() {
       const created = await res.json();
       setMaquinas(list => [...list, created]);
       setModalNew(false);
-      setNewMachine({ idMarcaMaquina: null, idTipoEquipo: null });
+      setNewMachine({ idMaquina: '', idMarcaMaquina: null, idTipoEquipo: null });
       setNewSucursal(null);
     } catch {
       Alert.alert('Error', 'No se pudo crear máquina.');
@@ -205,7 +210,7 @@ export default function InventarioAdmin() {
     return <ActivityIndicator style={styles.center} size="large" />;
   }
 
-  // Aplica filtro `selectedSucursal`
+  // Filtrar máquinas
   const filtered = maquinas.filter(
     m => selectedSucursal === null || m.idSucursal === selectedSucursal
   );
@@ -213,7 +218,7 @@ export default function InventarioAdmin() {
   return (
     <View style={styles.container}>
 
-      {/* ← FILTRO ↓↓↓ */}
+      {/* FILTRO */}
       <View style={styles.filterContainer}>
         <TouchableOpacity
           style={styles.filterButton}
@@ -222,41 +227,24 @@ export default function InventarioAdmin() {
           <Text style={styles.filterButtonText}>
             {selectedSucursal === null
               ? 'Todas / Sin asignar'
-              : sucursales.find(s => s.idSucursal === selectedSucursal)
-                  ?.direccionSucursal}
+              : sucursales.find(s => s.idSucursal === selectedSucursal)?.direccionSucursal}
           </Text>
         </TouchableOpacity>
         {dropdownVisible && (
           <ScrollView style={styles.dropdown}>
             <TouchableOpacity
-              onPress={() => {
-                setSelectedSucursal(null);
-                setDropdownVisible(false);
-              }}
+              onPress={() => { setSelectedSucursal(null); setDropdownVisible(false); }}
             >
-              <Text
-                style={[
-                  styles.option,
-                  selectedSucursal === null && styles.selected
-                ]}
-              >
+              <Text style={[styles.option, selectedSucursal === null && styles.selected]}>
                 Todas / Sin asignar
               </Text>
             </TouchableOpacity>
             {sucursales.map(s => (
               <TouchableOpacity
                 key={s.idSucursal}
-                onPress={() => {
-                  setSelectedSucursal(s.idSucursal);
-                  setDropdownVisible(false);
-                }}
+                onPress={() => { setSelectedSucursal(s.idSucursal); setDropdownVisible(false); }}
               >
-                <Text
-                  style={[
-                    styles.option,
-                    selectedSucursal === s.idSucursal && styles.selected
-                  ]}
-                >
+                <Text style={[styles.option, selectedSucursal === s.idSucursal && styles.selected]}>
                   {s.direccionSucursal}
                 </Text>
               </TouchableOpacity>
@@ -264,7 +252,6 @@ export default function InventarioAdmin() {
           </ScrollView>
         )}
       </View>
-      {/* ↑↑↑ FIN FILTRO */}
 
       {/* LISTA */}
       <FlatList
@@ -280,66 +267,63 @@ export default function InventarioAdmin() {
               <View style={styles.cardHeader}>
                 <Text style={styles.label}>Serial: {item.idMaquina}</Text>
                 <View style={styles.cardActions}>
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={() => {
-                      setSelMachine(item);
-                      setSelSucursal(item.idSucursal);
-                      setModalEdit(true);
-                    }}
-                  >
+                  <TouchableOpacity style={styles.editButton} onPress={() => { setSelMachine(item); setSelSucursal(item.idSucursal ?? null); setModalEdit(true); }}>
                     <Text style={styles.editText}>Editar</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(item.idMaquina)}
-                  >
+                  <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.idMaquina)}>
                     <Text style={styles.deleteText}>Eliminar</Text>
                   </TouchableOpacity>
                 </View>
               </View>
-              <Text style={styles.line}>
-                <Text style={styles.subLabel}>Tipo:</Text> {tipo?.descripcionTipoEquipo}
-              </Text>
-              <Text style={styles.line}>
-                <Text style={styles.subLabel}>Marca:</Text> {marca?.nombreMarcaMaquina}
-              </Text>
-              <Text style={styles.line}>
-                <Text style={styles.subLabel}>Sucursal:</Text>{' '}
-                {suc?.direccionSucursal ?? 'Sin asignar'}
-              </Text>
+              <Text style={styles.line}><Text style={styles.subLabel}>Tipo:</Text> {tipo?.descripcionTipoEquipo}</Text>
+              <Text style={styles.line}><Text style={styles.subLabel}>Marca:</Text> {marca?.nombreMarcaMaquina}</Text>
+              <Text style={styles.line}><Text style={styles.subLabel}>Sucursal:</Text> {suc?.direccionSucursal ?? 'Sin asignar'}</Text>
             </View>
           );
         }}
       />
 
       {/* + Nueva Máquina */}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setModalNew(true)}
-      >
+      <TouchableOpacity style={styles.addButton} onPress={() => setModalNew(true)}>
         <Text style={styles.addButtonText}>＋</Text>
       </TouchableOpacity>
 
-      {/* Botón Gestión de Marcas */}
-      <TouchableOpacity
-        style={[styles.addButton, { right: 100, backgroundColor: '#FFA500' }]}
-        onPress={() => setModalMarca(true)}
-      >
+      {/* Gestión de Marcas */}
+      <TouchableOpacity style={[styles.addButton, { right: 100, backgroundColor: '#FFA500' }]} onPress={() => setModalMarca(true)}>
         <Text style={styles.addButtonText}>Marcas</Text>
       </TouchableOpacity>
 
-      {/* Modal: Reasignar */}
+      {/* Modal: Editar Máquina */}
       <Modal visible={modalEdit} animationType="slide">
         <ScrollView contentContainerStyle={styles.modal}>
-          <Text style={styles.modalTitle}>Reasignar Sucursal</Text>
-          {sucursales.map(s => (
-            <TouchableOpacity key={s.idSucursal} onPress={() => setSelSucursal(s.idSucursal)}>
-              <Text style={[styles.option, selSucursal === s.idSucursal && styles.selected]}>
-                {s.direccionSucursal}
-              </Text>
+          <Text style={styles.modalTitle}>Editar Máquina</Text>
+          <Text style={styles.subLabel}>Serial</Text>
+          <TextInput style={styles.input} value={selMachine?.idMaquina?.toString() ?? ''} editable={false} />
+
+          <Text style={styles.subLabel}>Marca</Text>
+          {marcas.map(ma => (
+            <TouchableOpacity key={ma.idMarcaMaquina} onPress={() => setSelMachine(sm => ({ ...sm, idMarcaMaquina: ma.idMarcaMaquina }))}>
+              <Text style={[styles.option, selMachine?.idMarcaMaquina === ma.idMarcaMaquina && styles.selected]}>{ma.nombreMarcaMaquina}</Text>
             </TouchableOpacity>
           ))}
+
+          <Text style={styles.subLabel}>Tipo</Text>
+          {tipos.map(t => (
+            <TouchableOpacity key={t.idTipoEquipo} onPress={() => setSelMachine(sm => ({ ...sm, idTipoEquipo: t.idTipoEquipo }))}>
+              <Text style={[styles.option, selMachine?.idTipoEquipo === t.idTipoEquipo && styles.selected]}>{t.descripcionTipoEquipo}</Text>
+            </TouchableOpacity>
+          ))}
+
+          <Text style={styles.subLabel}>Sucursal</Text>
+          <TouchableOpacity onPress={() => setSelSucursal(null)}>
+            <Text style={[styles.option, selSucursal === null && styles.selected]}>Sin asignar</Text>
+          </TouchableOpacity>
+          {sucursales.map(s => (
+            <TouchableOpacity key={s.idSucursal} onPress={() => setSelSucursal(s.idSucursal)}>
+              <Text style={[styles.option, selSucursal === s.idSucursal && styles.selected]}>{s.direccionSucursal}</Text>
+            </TouchableOpacity>
+          ))}
+
           <View style={styles.modalButtons}>
             <Button title="Cancelar" onPress={() => setModalEdit(false)} />
             <Button title="Guardar"   onPress={handleSave} />
@@ -351,59 +335,36 @@ export default function InventarioAdmin() {
       <Modal visible={modalNew} animationType="slide">
         <ScrollView contentContainerStyle={styles.modal}>
           <Text style={styles.modalTitle}>Nueva Máquina</Text>
+          <Text style={styles.subLabel}>Serial (ID Máquina)</Text>
+          <TextInput
+            placeholder="Serial"
+            style={styles.input}
+            keyboardType="number-pad"
+            value={newMachine.idMaquina}
+            onChangeText={text => setNewMachine(nm => ({ ...nm, idMaquina: text }))}
+          />
 
           <Text style={styles.subLabel}>Marca</Text>
           {marcas.map(ma => (
-            <TouchableOpacity
-              key={ma.idMarcaMaquina}
-              onPress={() =>
-                setNewMachine(nm => ({ ...nm, idMarcaMaquina: ma.idMarcaMaquina }))
-              }
-            >
-              <Text
-                style={[
-                  styles.option,
-                  newMachine.idMarcaMaquina === ma.idMarcaMaquina && styles.selected
-                ]}
-              >
-                {ma.nombreMarcaMaquina}
-              </Text>
+            <TouchableOpacity key={ma.idMarcaMaquina} onPress={() => setNewMachine(nm => ({ ...nm, idMarcaMaquina: ma.idMarcaMaquina }))}>
+              <Text style={[styles.option, newMachine.idMarcaMaquina === ma.idMarcaMaquina && styles.selected]}>{ma.nombreMarcaMaquina}</Text>
             </TouchableOpacity>
           ))}
 
           <Text style={styles.subLabel}>Tipo</Text>
           {tipos.map(t => (
-            <TouchableOpacity
-              key={t.idTipoEquipo}
-              onPress={() =>
-                setNewMachine(nm => ({ ...nm, idTipoEquipo: t.idTipoEquipo }))
-              }
-            >
-              <Text
-                style={[
-                  styles.option,
-                  newMachine.idTipoEquipo === t.idTipoEquipo && styles.selected
-                ]}
-              >
-                {t.descripcionTipoEquipo}
-              </Text>
+            <TouchableOpacity key={t.idTipoEquipo} onPress={() => setNewMachine(nm => ({ ...nm, idTipoEquipo: t.idTipoEquipo }))}>
+              <Text style={[styles.option, newMachine.idTipoEquipo === t.idTipoEquipo && styles.selected]}>{t.descripcionTipoEquipo}</Text>
             </TouchableOpacity>
           ))}
 
           <Text style={styles.subLabel}>Sucursal</Text>
+          <TouchableOpacity onPress={() => setNewSucursal(null)}>
+            <Text style={[styles.option, newSucursal === null && styles.selected]}>Sin asignar</Text>
+          </TouchableOpacity>
           {sucursales.map(s => (
-            <TouchableOpacity
-              key={s.idSucursal}
-              onPress={() => setNewSucursal(s.idSucursal)}
-            >
-              <Text
-                style={[
-                  styles.option,
-                  newSucursal === s.idSucursal && styles.selected
-                ]}
-              >
-                {s.direccionSucursal}
-              </Text>
+            <TouchableOpacity key={s.idSucursal} onPress={() => setNewSucursal(s.idSucursal)}>
+              <Text style={[styles.option, newSucursal === s.idSucursal && styles.selected]}>{s.direccionSucursal}</Text>
             </TouchableOpacity>
           ))}
 

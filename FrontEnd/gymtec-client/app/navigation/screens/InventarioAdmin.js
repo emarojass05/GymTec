@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   Button
@@ -35,6 +36,13 @@ export default function InventarioAdmin() {
   const [newMachine, setNewMachine]   = useState({ idMarcaMaquina: null, idTipoEquipo: null });
   const [newSucursal, setNewSucursal] = useState(null);
 
+  // GESTIÓN DE MARCAS
+  const [modalMarca, setModalMarca]           = useState(false);
+  const [modalMarcaNew, setModalMarcaNew]     = useState(false);
+  const [modalMarcaEdit, setModalMarcaEdit]   = useState(false);
+  const [newMarcaName, setNewMarcaName]       = useState('');
+  const [editMarca, setEditMarca]             = useState(null);
+
   // Carga inicial
   useEffect(() => {
     (async () => {
@@ -59,6 +67,17 @@ export default function InventarioAdmin() {
       }
     })();
   }, []);
+
+  // Refrescar marcas
+  const refreshMarcas = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/MarcaMaquina`);
+      const data = await res.json();
+      setMarcas(data);
+    } catch {
+      console.warn('No se pudo refrescar marcas');
+    }
+  };
 
   // Reasignar sucursal
   const handleSave = async () => {
@@ -129,7 +148,59 @@ export default function InventarioAdmin() {
     }
   };
 
-  // Mientras carga, spinner
+  // Crear marca
+  const handleMarcaCreate = async () => {
+    if (!newMarcaName.trim()) {
+      Alert.alert('Error', 'Ingrese nombre de marca.');
+      return;
+    }
+    try {
+      const res = await fetch(`${apiUrl}/MarcaMaquina`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ nombreMarcaMaquina: newMarcaName.trim() })
+      });
+      if (!res.ok) throw new Error();
+      await refreshMarcas();
+      setModalMarcaNew(false);
+      setNewMarcaName('');
+    } catch {
+      Alert.alert('Error', 'No se pudo crear marca.');
+    }
+  };
+
+  // Editar marca
+  const handleMarcaUpdate = async () => {
+    if (!editMarca.nombreMarcaMaquina.trim()) {
+      Alert.alert('Error', 'Nombre no puede quedar vacío.');
+      return;
+    }
+    try {
+      const res = await fetch(`${apiUrl}/MarcaMaquina/${editMarca.idMarcaMaquina}`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(editMarca)
+      });
+      if (!res.ok) throw new Error();
+      await refreshMarcas();
+      setModalMarcaEdit(false);
+      setEditMarca(null);
+    } catch {
+      Alert.alert('Error', 'No se pudo actualizar marca.');
+    }
+  };
+
+  // Eliminar marca
+  const handleMarcaDelete = async id => {
+    try {
+      const res = await fetch(`${apiUrl}/MarcaMaquina/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setMarcas(list => list.filter(m => m.idMarcaMaquina !== id));
+    } catch {
+      Alert.alert('Error', 'No se pudo eliminar marca.');
+    }
+  };
+
   if (loading) {
     return <ActivityIndicator style={styles.center} size="large" />;
   }
@@ -250,6 +321,14 @@ export default function InventarioAdmin() {
         <Text style={styles.addButtonText}>＋</Text>
       </TouchableOpacity>
 
+      {/* Botón Gestión de Marcas */}
+      <TouchableOpacity
+        style={[styles.addButton, { right: 100, backgroundColor: '#FFA500' }]}
+        onPress={() => setModalMarca(true)}
+      >
+        <Text style={styles.addButtonText}>Marcas</Text>
+      </TouchableOpacity>
+
       {/* Modal: Reasignar */}
       <Modal visible={modalEdit} animationType="slide">
         <ScrollView contentContainerStyle={styles.modal}>
@@ -334,6 +413,69 @@ export default function InventarioAdmin() {
           </View>
         </ScrollView>
       </Modal>
+
+      {/* Modal: Gestión de Marcas */}
+      <Modal visible={modalMarca} animationType="slide">
+        <ScrollView contentContainerStyle={styles.modal}>
+          <Text style={styles.modalTitle}>Gestión de Marcas</Text>
+          {marcas.map(m => (
+            <View key={m.idMarcaMaquina} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}>
+              <Text>{m.nombreMarcaMaquina}</Text>
+              <View style={{ flexDirection: 'row' }}>
+                <Button
+                  title="Editar"
+                  onPress={() => {
+                    setEditMarca(m);
+                    setModalMarcaEdit(true);
+                  }}
+                />
+                <Button
+                  title="Eliminar"
+                  onPress={() => handleMarcaDelete(m.idMarcaMaquina)}
+                />
+              </View>
+            </View>
+          ))}
+          <View style={styles.modalButtons}>
+            <Button title="Añadir Marca" onPress={() => setModalMarcaNew(true)} />
+            <Button title="Cerrar"       onPress={() => setModalMarca(false)} />
+          </View>
+        </ScrollView>
+      </Modal>
+
+      {/* Modal: Nueva Marca */}
+      <Modal visible={modalMarcaNew} animationType="slide">
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>Nueva Marca</Text>
+          <TextInput
+            placeholder="Nombre de Marca"
+            style={styles.input}
+            value={newMarcaName}
+            onChangeText={setNewMarcaName}
+          />
+          <View style={styles.modalButtons}>
+            <Button title="Cancelar" onPress={() => setModalMarcaNew(false)} />
+            <Button title="Crear"    onPress={handleMarcaCreate} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal: Editar Marca */}
+      <Modal visible={modalMarcaEdit} animationType="slide">
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>Editar Marca</Text>
+          <TextInput
+            placeholder="Nombre de Marca"
+            style={styles.input}
+            value={editMarca?.nombreMarcaMaquina ?? ''}
+            onChangeText={text => setEditMarca(em => ({ ...em, nombreMarcaMaquina: text }))}
+          />
+          <View style={styles.modalButtons}>
+            <Button title="Cancelar" onPress={() => setModalMarcaEdit(false)} />
+            <Button title="Guardar"  onPress={handleMarcaUpdate} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -358,9 +500,10 @@ const styles = StyleSheet.create({
   editText:          { color:'#fff' },
   deleteButton:      { backgroundColor:'#FF3B30', padding:6, borderRadius:4 },
   deleteText:        { color:'#fff' },
-  addButton:         { position:'absolute', bottom:24, right:24, width:56, height:56, borderRadius:28, backgroundColor:'#007AFF', justifyContent:'center', alignItems:'center', elevation:5 },
-  addButtonText:     { color:'#fff', fontSize:32 },
-  modal:             { padding:20, backgroundColor:'#fff' },
+  addButton:         { position:'absolute', bottom:24, right:24, width:80, height:56, borderRadius:28, backgroundColor:'#007AFF', justifyContent:'center', alignItems:'center', elevation:5 },
+  addButtonText:     { color:'#fff', fontSize:14 },
+  modal:             { padding:20, backgroundColor:'#fff', flex:1, justifyContent:'center' },
   modalTitle:        { fontSize:18, fontWeight:'bold', marginBottom:12 },
-  modalButtons:      { flexDirection:'row', justifyContent:'space-between', marginTop:20 }
+  modalButtons:      { flexDirection:'row', justifyContent:'space-between', marginTop:20 },
+  input:             { borderWidth:1, borderColor:'#ccc', borderRadius:6, padding:8, marginBottom:12 }
 });
